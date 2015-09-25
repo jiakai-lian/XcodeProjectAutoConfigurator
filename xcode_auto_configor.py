@@ -7,6 +7,17 @@ import json
 #print 'Number of arguments:', len(sys.argv), 'arguments.'
 #print 'Argument List:', str(sys.argv)
 
+class Configuration:
+    def __init__(self,jsonFileName):
+        self.jsonFileName = jsonFileName
+        #find config name
+        self.name = jsonFileName.split(".")[0].lower()
+        
+        #load json data
+        with open(jsonFileName) as data_file:
+            self.jsonContent = json.load(data_file)
+
+
 if len(sys.argv) < 2:
     raise Exception("need project.pbxproj file path")
 
@@ -15,29 +26,18 @@ if len(sys.argv) < 2:
 filePath = sys.argv[1]
 
 if len(sys.argv) > 2:
-    configFiles = list(sys.argv)
-    del configFiles[0:2]
+    jsonFiles = list(sys.argv)
+    del jsonFiles[0:2]
 else:
-    configFiles = ["debug.json","release.json"]
+    jsonFiles = ["debug.json","release.json"]
 
-print configFiles
+print jsonFiles
 
-configNames = list();
-
-#load each config
-for config in configFiles:
-    configNames.append(config.split(".")[0])
-
-print configNames
-
-configJsons = list()
-
-#load each json files
-for config in configFiles:
-    with open(config) as data_file:
-        configJsons.append(json.load(data_file))
-
-print configJsons
+#create configuration objects
+dictOfConfig = dict();
+for file in jsonFiles:
+    config = Configuration(file)
+    dictOfConfig[config.name] = config
 
 #load project file and create a backup
 project = XcodeProject.Load(filePath)
@@ -45,22 +45,16 @@ project.backup()
 
 rootObject = project["rootObject"]
 projectObject = project["objects"][rootObject]["buildConfigurationList"]
-
-configEntries = list()
     
 for id in project["objects"][projectObject]["buildConfigurations"]:
-    for configName in configNames:
-        if project["objects"][id]["name"].lower() == configName:
-            configEntries.append(project["objects"][id]["buildSettings"])
-
-#start config
-
-#debug conf
-for i in range(0, len(configEntries)):
-    entry = configEntries[i];
-    for key in configJsons[i]:
-    #    print key
-        entry[key] = configJsons[i][key]
+    name = project["objects"][id]["name"].lower()
+    
+    #if this configuration need to be changed
+    if dictOfConfig[name] is not None:
+        entry = project["objects"][id]["buildSettings"]
+        #for each setting in the json, apply to the target entry
+        for key in dictOfConfig[name].jsonContent:
+            entry[key] = dictOfConfig[name].jsonContent[key]
 
 project.save()
 
