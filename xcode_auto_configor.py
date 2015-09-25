@@ -2,15 +2,42 @@
 
 from mod_pbxproj import XcodeProject
 import sys
+import json
 
 #print 'Number of arguments:', len(sys.argv), 'arguments.'
 #print 'Argument List:', str(sys.argv)
 
-if len(sys.argv) > 2:
-    raise Exception("more than one file path")
+if len(sys.argv) < 2:
+    raise Exception("need project.pbxproj file path")
+
 
 #read the file path
 filePath = sys.argv[1]
+
+if len(sys.argv) > 2:
+    configFiles = list(sys.argv)
+    del configFiles[0:2]
+else:
+    configFiles = ["debug.json","release.json"]
+
+print configFiles
+
+configNames = list();
+
+#load each config
+for config in configFiles:
+    configNames.append(config.split(".")[0])
+
+print configNames
+
+configJsons = list()
+
+#load each json files
+for config in configFiles:
+    with open(config) as data_file:
+        configJsons.append(json.load(data_file))
+
+print configJsons
 
 #load project file and create a backup
 project = XcodeProject.Load(filePath)
@@ -18,37 +45,23 @@ project.backup()
 
 rootObject = project["rootObject"]
 projectObject = project["objects"][rootObject]["buildConfigurationList"]
-    
-debugConf = None
-releaseConf = None
+
+configEntries = list()
     
 for id in project["objects"][projectObject]["buildConfigurations"]:
-    if project["objects"][id]["name"].lower() == "debug":
-        debugConf = project["objects"][id]["buildSettings"]
-    elif project["objects"][id]["name"].lower() == "release":
-        releaseConf = project["objects"][id]["buildSettings"]
+    for configName in configNames:
+        if project["objects"][id]["name"].lower() == configName:
+            configEntries.append(project["objects"][id]["buildSettings"])
 
 #start config
 
 #debug conf
-debugConf["WARNING_CFLAGS"] = "-Wall -Wextra -Wno-unused-parameter -Wno-unused-variable"
-debugConf["CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER"] = "YES"
-debugConf["CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND"] = "YES"
-debugConf["CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY"] = "YES"
-debugConf["RUN_CLANG_STATIC_ANALYZER"] = "YES"
-debugConf["GCC_TREAT_WARNINGS_AS_ERRORS"] = "NO"
-
-
-#release conf
-releaseConf["WARNING_CFLAGS"] = "-Wall -Wextra -Wno-unused-parameter -Wno-unused-variable"
-releaseConf["CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER"] = "YES"
-releaseConf["CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND"] = "YES"
-releaseConf["CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY"] = "YES"
-releaseConf["GCC_TREAT_WARNINGS_AS_ERRORS"] = "YES"
-releaseConf["RUN_CLANG_STATIC_ANALYZER"] = "YES"
-releaseConf["CLANG_STATIC_ANALYZER_MODE"] = "deep"
-
+for i in range(0, len(configEntries)):
+    entry = configEntries[i];
+    for key in configJsons[i]:
+    #    print key
+        entry[key] = configJsons[i][key]
 
 project.save()
-    
+
 print "Auto Configuration Complete"
