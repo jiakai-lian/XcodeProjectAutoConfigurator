@@ -26,15 +26,10 @@ You also can explicitly indicate json files.
 python xcode_auto_configurator.py Sample.xcodeproj/project.pbxproj debug.json release.json
 ```
 
-**How about another target?** 
-
-That's easy.
-Let's say the sample project has a target named **beta**.
-To setup that target, simply create a **beta.json**, and write your configurations by following the sample json, and then run the command
-```
-python xcode_auto_configurator.py Sample.xcodeproj/project.pbxproj beta.json
-```
 
 **Auto Backup:**
 
 If anything wrong, you always can find your backups inside the xcodeproj folder.
+
+References:
+[mod-pbxproj](https://github.com/kronenthaler/mod-pbxproj)
