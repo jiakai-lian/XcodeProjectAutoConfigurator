@@ -31,5 +31,6 @@ python xcode_auto_configurator.py Sample.xcodeproj/project.pbxproj debug.json re
 
 If anything wrong, you always can find your backups inside the xcodeproj folder.
 
-References:
+**References:**
+
 [mod-pbxproj](https://github.com/kronenthaler/mod-pbxproj)
