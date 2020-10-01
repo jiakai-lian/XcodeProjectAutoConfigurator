@@ -4,7 +4,7 @@
 A simple Python script used to automatically configure the project.pbxproj file.
 This script reads json config files and then apply these configurations to the project targets.
 
-## How To Use ##
+## How To Use the project ##
 
 Clone this git repository or simply download **mod_pbxproj.py** and **xcode_auto_configurator.py**. Please download **debug.json** and **release.json** if you want. These two files are my own preferences for iOS  projects.
 
